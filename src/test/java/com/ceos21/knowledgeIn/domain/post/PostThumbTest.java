@@ -4,7 +4,6 @@ import com.ceos21.knowledgeIn.domain.user.User;
 import com.ceos21.knowledgeIn.repository.PostRepository;
 import com.ceos21.knowledgeIn.repository.UserRepository;
 import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assert;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
