@@ -1,5 +1,6 @@
 package com.ceos21.knowledgeIn.domain.post;
 
+import com.ceos21.knowledgeIn.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +9,8 @@ import java.util.List;
 
 //셀프 참조를 하므로 무한루프 주의필요
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(access = AccessLevel.PRIVATE)
 @Getter
 @Entity
 public class Post {
@@ -22,55 +25,41 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostType postType;
 
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "user_id")
+    private User user;
+
     //질문(부모) 게시글을 참조
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "parent_post_id")
     private Post parentPost;
 
     //답변(자식) 게시글을 참조
+    @Builder.Default
     @OneToMany(mappedBy = "parentPost") //CASCADE 필요?
     private List<Post> childPosts = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "post",
-            cascade = CascadeType.ALL, orphanRemoval = true) //Post가  PostThumb의 영속성을 관리
+            cascade = CascadeType.ALL, orphanRemoval = true) //Post가  PostHashTag의 영속성을 관리
     private List<PostHashTag> hashTags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post")
-    private List<Image> images = new ArrayList<>();
-
+    @Builder.Default
     @OneToMany(mappedBy = "post",
             cascade = CascadeType.ALL, orphanRemoval = true)  //Post가  PostThumb의 영속성을 관리
     private List<PostThumb> postThumbs = new ArrayList<>();
 
+    @Builder.Default
+    @OneToMany(mappedBy = "post")
+    private List<Image> images = new ArrayList<>();
+
+    @Builder.Default
     @OneToMany(mappedBy = "post")
     private List<Comment> comments = new ArrayList<>();
-
-    @Builder(access = AccessLevel.PRIVATE)
-    private Post(
-            String title,
-            String content,
-            PostType postType,
-            Post parentPost
-    ) {
-        this.title = title;
-        this.content = content;
-        this.postType = postType;
-
-        // 질문글 VS 답변글 생성 로직
-        if (this.postType == PostType.ANSWER) { //답변글
-            if (parentPost == null) {
-                throw new IllegalArgumentException("답변글(ANSWER)은 parentPost가 필수입니다.");
-            }
-            this.parentPost = parentPost;
-        } else {                                //질문글
-            this.parentPost = null;
-        }
-
-
-    }
 
     // (옵션) postType과 parentPost를 받는 정적 팩터리 메서드
     // 굳이 써야 하는 건 아니지만, 외부에서 조금 더 읽기 편할 수 있음
     public static Post createQuestion(String title, String content) {
+        if (title == null || content == null) throw new IllegalArgumentException("인자에 Null 값이 있습니다");
+
         return Post.builder()
                 .title(title)
                 .content(content)
@@ -79,6 +68,9 @@ public class Post {
     }
 
     public static Post createAnswer(String title, String content, Post parentPost) {
+        if (title == null || content == null) throw new IllegalArgumentException("인자에 Null 값이 있습니다");
+        if (parentPost == null) throw new IllegalArgumentException("답변글(ANSWER)은 parentPost가 필수입니다.");
+        
         Post post = Post.builder()
                 .title(title)
                 .content(content)

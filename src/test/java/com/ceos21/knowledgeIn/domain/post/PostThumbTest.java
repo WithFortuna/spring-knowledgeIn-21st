@@ -23,10 +23,6 @@ class PostThumbTest {
     UserRepository userRepository;
     @Autowired
     EntityManager em;
-    @BeforeEach
-    void init() {
-
-    }
 
     @Test
     void createPostThumb() {
@@ -40,10 +36,9 @@ class PostThumbTest {
                 .build();
         userRepository.save(user);
 
-        PostThumb postThumb = PostThumb.create(post, user);
+        PostThumb postThumb = PostThumb.createLike(post, user);
 
         //when
-        post.addPostThumb(postThumb);
         em.flush();
         em.clear();
 
@@ -64,10 +59,9 @@ class PostThumbTest {
                 .build();
         userRepository.save(user);
 
-        PostThumb postThumb = PostThumb.create(post, user);
+        PostThumb postThumb = PostThumb.createDisLike(post, user);
 
         //when
-        post.addPostThumb(postThumb);
         List<PostThumb> postThumbs = post.getPostThumbs();
         postThumbs.remove(0);
         em.flush();
