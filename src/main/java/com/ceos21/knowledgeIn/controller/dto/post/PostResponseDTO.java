@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.util.Optional;
 
+//hashtag아이디 넣어야함 개선사항!
 @AllArgsConstructor
 @Builder
 @Data

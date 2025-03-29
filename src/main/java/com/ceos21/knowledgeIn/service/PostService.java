@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,7 +70,7 @@ public class PostService {
         hashTagService.createOrFindHashTags(dto.getNewHashTagStrings(), postId);
 
         //Image 수정
-        List<Image> findImages = imageRepository.findAllById(dto.getImageIds());
+        List<Image> findImages = dto.getImageIds().isEmpty() ? new ArrayList<>() : imageRepository.findAllById(dto.getImageIds());
         findPost.getImages().clear();
 
         findImages.forEach(image -> findPost.getImages().add(image));

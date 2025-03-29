@@ -1,12 +1,11 @@
 package com.ceos21.knowledgeIn.controller.dto.post;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor  //List에 디폴트 값을 넣으려면 필수!!
 @AllArgsConstructor
 @Builder
 @Data
@@ -15,9 +14,9 @@ public class PostModifyDTO {
 
     private String content;
 
-    private List<Long> imageIds;
+    private List<Long> imageIds=new ArrayList<>();
 
-    private List<Long> previousHashTagIds;
+    private List<Long> previousHashTagIds=new ArrayList<>();
 
-    private List<String> newHashTagStrings;
+    private List<String> newHashTagStrings=new ArrayList<>();
 }

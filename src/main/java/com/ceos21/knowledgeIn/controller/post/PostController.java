@@ -3,6 +3,7 @@ package com.ceos21.knowledgeIn.controller.post;
 import com.ceos21.knowledgeIn.controller.dto.post.PostCreateDTO;
 import com.ceos21.knowledgeIn.controller.dto.post.PostModifyDTO;
 import com.ceos21.knowledgeIn.controller.dto.post.PostResponseDTO;
+import com.ceos21.knowledgeIn.service.HashTagService;
 import com.ceos21.knowledgeIn.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,13 +14,20 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class PostController {
     private final PostService postService;
+    private final HashTagService hashTagService;
 
     /**
      * Post & HashTag (&PostHashTag) api
      * */
     @PostMapping("/posts")
     public Long createPost(@RequestBody PostCreateDTO dto) {
-        return postService.createPost(dto);
+        Long postId = postService.createPost(dto);
+
+        if (dto.getHashTagContents() != null) {
+            hashTagService.createOrFindHashTags(dto.getHashTagContents(), postId);
+        }
+
+        return postId;
     }
 
     @GetMapping("/posts/{postId}")
