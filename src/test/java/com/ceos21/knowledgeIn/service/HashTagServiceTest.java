@@ -59,10 +59,11 @@ class HashTagServiceTest {
         Long postId = postService.createPost(dto);
 
         //when
-        List<Long> hashTagIds = hashTagService.createOrFindHashTags(HashTagCreateDTO.builder()
+        HashTagCreateDTO dto1 = HashTagCreateDTO.builder()
                 .contents(dto.getHashTagContents())
                 .postId(postId)
-                .build());
+                .build();
+        List<Long> hashTagIds = hashTagService.createOrFindHashTags(dto1.getContents(),postId);
 
         //then
         hashTagIds.forEach(id->log.info("id: "+id+"\n"));
@@ -75,10 +76,11 @@ class HashTagServiceTest {
         Long postId = postService.createPost(dto);
 
         //when
-        hashTagService.createOrFindHashTags(HashTagCreateDTO.builder()
+        HashTagCreateDTO dto1 = HashTagCreateDTO.builder()
                 .contents(dto.getHashTagContents())
                 .postId(postId)
-                .build());
+                .build();
+        List<Long> hashTagIds = hashTagService.createOrFindHashTags(dto1.getContents(),postId);
 
         //then
         List<PostHashTagResponseDTO> postHashTags = hashTagService.findPostHashTag(postId);
@@ -88,10 +90,11 @@ class HashTagServiceTest {
     void findHashTag() {
         //given
         Long postId = postService.createPost(dto);
-        List<Long> hashTagIds = hashTagService.createOrFindHashTags(HashTagCreateDTO.builder()
+        HashTagCreateDTO dto1 = HashTagCreateDTO.builder()
                 .contents(dto.getHashTagContents())
                 .postId(postId)
-                .build());
+                .build();
+        List<Long> hashTagIds = hashTagService.createOrFindHashTags(dto1.getContents(),postId);
 
         //when
         HashTagResponseDTO hashTagDTO = hashTagService.findHashTag(hashTagIds.get(1));
@@ -104,10 +107,11 @@ class HashTagServiceTest {
     void findAllHashTags() {
         //given
         Long postId = postService.createPost(dto);
-        List<Long> hashTagIds = hashTagService.createOrFindHashTags(HashTagCreateDTO.builder()
-                .contents(dto.getHashTagContents())
+        HashTagCreateDTO dto = HashTagCreateDTO.builder()
+                .contents(this.dto.getHashTagContents())
                 .postId(postId)
-                .build());
+                .build();
+        List<Long> hashTagIds = hashTagService.createOrFindHashTags(dto.getContents(), postId);
         //when
         List<HashTagResponseDTO> hashTagDTOs = hashTagService.findAllHashTags();
 
@@ -119,10 +123,11 @@ class HashTagServiceTest {
     void deleteHashTag() {
         //given
         Long postId = postService.createPost(dto);
-        List<Long> hashTagIds = hashTagService.createOrFindHashTags(HashTagCreateDTO.builder()
-                .contents(dto.getHashTagContents())
+        HashTagCreateDTO dto = HashTagCreateDTO.builder()
+                .contents(this.dto.getHashTagContents())
                 .postId(postId)
-                .build());
+                .build();
+        List<Long> hashTagIds = hashTagService.createOrFindHashTags(dto.getContents(),postId);
 
         //when
         Long deleteHashTagId = hashTagIds.get(0);

@@ -31,4 +31,7 @@ public class Image {
         return image;
     }
 
+    public void updateUrl(String newFileUrl) {
+        this.imageUrl = newFileUrl;
+    }
 }

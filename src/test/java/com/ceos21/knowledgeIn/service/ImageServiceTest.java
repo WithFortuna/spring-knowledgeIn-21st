@@ -13,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -35,6 +37,15 @@ class ImageServiceTest {
 
     User user;
     Post post;
+    String imageContent = "file content is here";
+
+    MockMultipartFile mockFile= new MockMultipartFile(
+            "name",
+            "olaf.jpeg",
+            MediaType.IMAGE_JPEG_VALUE,
+            imageContent.getBytes()
+    );
+
 
     @BeforeEach
     void init() {
@@ -53,7 +64,7 @@ class ImageServiceTest {
         //given
         ImageCreateDTO imageDTO = ImageCreateDTO.builder()
                 .postId(post.getId())
-                .imageUrl("/임의경로")
+                .file(mockFile)
                 .build();
 
         //when
@@ -65,10 +76,9 @@ class ImageServiceTest {
     @Test
     void findImage() {
         //given
-        String imageUrl = "/임의경로";
         ImageCreateDTO imageDTO = ImageCreateDTO.builder()
                 .postId(post.getId())
-                .imageUrl(imageUrl)
+                .file(mockFile)
                 .build();
         Long id = imageService.createImage(imageDTO);
 
@@ -78,23 +88,23 @@ class ImageServiceTest {
         ImageResponseDTO image = imageService.findImage(id);
 
         //then
-        assertEquals(image.getImageUrl(),imageUrl);
+        assertThat(image.getId()).isNotNull();
+        assertThat(image.getImageUrl()).isNotNull();
     }
 
     @Test
     void findAllImages() {
         //given
-        String imageUrl = "/임의경로";
         ImageCreateDTO imageDTO = ImageCreateDTO.builder()
                 .postId(post.getId())
-                .imageUrl(imageUrl)
+                .file(mockFile)
                 .build();
         Long id = imageService.createImage(imageDTO);
 
         String imageUrl2 = "/임의경로";
         ImageCreateDTO imageDTO2 = ImageCreateDTO.builder()
                 .postId(post.getId())
-                .imageUrl(imageUrl2)
+                .file(mockFile)
                 .build();
         Long id2 = imageService.createImage(imageDTO2);
 
@@ -107,10 +117,12 @@ class ImageServiceTest {
         //then
         assertEquals(allImages.size(), 2);
 
-        List<String> urls = allImages.stream()
-                .map(image -> image.getImageUrl())
+
+        List<Long> ids = allImages.stream()
+                .map(image -> image.getId())
                 .collect(Collectors.toList());
-        assertThat(urls).containsExactlyInAnyOrder(imageUrl, imageUrl2);
+        assertThat(ids.size()).isEqualTo(2);
+        assertThat(ids).containsExactlyInAnyOrder(id, id2);
     }
 
     @Test
@@ -119,14 +131,14 @@ class ImageServiceTest {
         String imageUrl = "/임의경로";
         ImageCreateDTO imageDTO = ImageCreateDTO.builder()
                 .postId(post.getId())
-                .imageUrl(imageUrl)
+                .file(mockFile)
                 .build();
         Long id = imageService.createImage(imageDTO);
 
         String imageUrl2 = "/임의경로";
         ImageCreateDTO imageDTO2 = ImageCreateDTO.builder()
                 .postId(post.getId())
-                .imageUrl(imageUrl2)
+                .file(mockFile)
                 .build();
         Long id2 = imageService.createImage(imageDTO2);
 
@@ -140,6 +152,6 @@ class ImageServiceTest {
         List<ImageResponseDTO> allImages = imageService.findAllImages();
 
         assertEquals(allImages.size(), 1);
-        assertEquals(allImages.get(0).getImageUrl(), imageUrl2);
+        assertEquals(allImages.get(0).getId(), id2);
     }
 }
