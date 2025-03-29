@@ -1,5 +1,6 @@
 package com.ceos21.knowledgeIn.domain.post;
 
+import com.ceos21.knowledgeIn.domain.common.BaseTimeEntity;
 import com.ceos21.knowledgeIn.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.util.List;
 @Builder(access = AccessLevel.PRIVATE)
 @Getter
 @Entity
-public class Post {
+public class Post extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "post_Id")
     private Long id;
@@ -57,17 +58,18 @@ public class Post {
 
     // (옵션) postType과 parentPost를 받는 정적 팩터리 메서드
     // 굳이 써야 하는 건 아니지만, 외부에서 조금 더 읽기 편할 수 있음
-    public static Post createQuestion(String title, String content) {
+    public static Post createQuestion(String title, String content, User writer) {
         if (title == null || content == null) throw new IllegalArgumentException("인자에 Null 값이 있습니다");
 
         return Post.builder()
                 .title(title)
                 .content(content)
                 .postType(PostType.QUESTION)
+                .user(writer)
                 .build();
     }
 
-    public static Post createAnswer(String title, String content, Post parentPost) {
+    public static Post createAnswer(String title, String content, Post parentPost, User writer) {
         if (title == null || content == null) throw new IllegalArgumentException("인자에 Null 값이 있습니다");
         if (parentPost == null) throw new IllegalArgumentException("답변글(ANSWER)은 parentPost가 필수입니다.");
         
@@ -76,6 +78,7 @@ public class Post {
                 .content(content)
                 .postType(PostType.ANSWER)
                 .parentPost(parentPost)
+                .user(writer)
                 .build();
         parentPost.addChildPost(post);
 
@@ -102,5 +105,18 @@ public class Post {
 
     public void addChildPost(Post childPost) {
         childPosts.add(childPost);
+    }
+
+    public void updatePost(String title, String content) {
+        this.title = title;
+        this.content = content;
+
+//        newHashTags.forEach(hashtag->hashTags.add(hashtag));
+    }
+
+    public void updateImages(List<Image> newImages) {
+        this.images.clear();
+
+        newImages.forEach(image -> images.add(image));
     }
 }

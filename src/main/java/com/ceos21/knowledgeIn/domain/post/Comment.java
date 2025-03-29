@@ -1,5 +1,6 @@
 package com.ceos21.knowledgeIn.domain.post;
 
+import com.ceos21.knowledgeIn.domain.common.BaseTimeEntity;
 import com.ceos21.knowledgeIn.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +11,7 @@ import lombok.*;
 @Builder(access = AccessLevel.PRIVATE)
 @Getter
 @Entity
-public class Comment {
+public class Comment extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
     private Long id;
