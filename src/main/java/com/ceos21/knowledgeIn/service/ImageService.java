@@ -6,7 +6,7 @@ import com.ceos21.knowledgeIn.domain.post.Image;
 import com.ceos21.knowledgeIn.domain.post.Post;
 import com.ceos21.knowledgeIn.exception.CustomJisikInException;
 import com.ceos21.knowledgeIn.exception.ErrorCode;
-import com.ceos21.knowledgeIn.fileManage.FileStorageService;
+import com.ceos21.knowledgeIn.file.manage.FileStorageService;
 import com.ceos21.knowledgeIn.repository.ImageRepository;
 import com.ceos21.knowledgeIn.repository.PostRepository;
 import lombok.RequiredArgsConstructor;

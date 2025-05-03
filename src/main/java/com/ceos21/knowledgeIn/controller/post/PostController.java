@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
 @RestController
@@ -32,7 +30,6 @@ public class PostController {
         return postId;
     }
 
-    //Read
     @GetMapping("/posts/{postId}")
     public PostResponseDTO findPost(@PathVariable Long postId) {
         PostResponseDTO dto = postService.findPost(postId);
