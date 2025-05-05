@@ -1,17 +1,24 @@
 package com.ceos21.knowledgeIn.security.auth.filter;
 
+import com.ceos21.knowledgeIn.exception.CustomJisikInException;
+import com.ceos21.knowledgeIn.exception.ErrorCode;
 import com.ceos21.knowledgeIn.security.auth.jwt.JwtTokenProvider;
+import com.ceos21.knowledgeIn.security.auth.jwt.refresh.RefreshTokenService;
 import com.ceos21.knowledgeIn.security.auth.user.detail.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
 
@@ -26,33 +33,61 @@ HTTP 요청의 Authorization 헤더에서 JWT 토큰 추출
 // 개선사항: 실제로는 사용자 정보를 DB에서 조회하거나, UserDetails를 활용해 권한(Role)까지 넣는 게 일반적입니다.
 
 // JWT 토큰 검증 및 인증처리
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 헤더 Authorization 필드에서 토큰 추출
-        String token = getTokenFromRequest(request);
+        String accessToken = getTokenFromRequest(request);
 
-        // token 검증: token이 유효하면
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Long userId = jwtTokenProvider.getUserIdFromToken(token);
-            String username = jwtTokenProvider.getUsernameFromToken(token);
+        // token 검증 (+ access token 재발행)
+        validateAndReissue(request, response, accessToken);
 
-            CustomUserDetails customUserDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(username);
-            // 인증 객체 생성: Principal로 UserDetails넣음
-            // 나중에 UserDetails를 꺼낼 때: SecurityContextHolder.getContext().getAuthentication().getPrincipal()
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        // 인증정보 저장
+        String username = jwtTokenProvider.getUsernameFromToken(accessToken);
+        CustomUserDetails customUserDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(username);
+        // 1. 인증 객체 생성: Principal로 UserDetails넣음
+        // 나중에 UserDetails를 꺼낼 때: SecurityContextHolder.getContext().getAuthentication().getPrincipal()
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            // SecurityContext 컨텍스트에 인증정보 저장
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+        // 2. SecurityContext 컨텍스트에 인증정보 저장
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 다음 필터에게 request 전달
+        // 3. 다음 필터에게 request 전달
         filterChain.doFilter(request, response);
+    }
+
+    private void validateAndReissue(HttpServletRequest request, HttpServletResponse response, String accessToken) {
+        if (!jwtTokenProvider.validateToken(accessToken)) { // access 토큰이 만료된거면..
+            Cookie refreshCookie = WebUtils.getCookie(request, "refreshToken");
+            String refreshToken;
+
+            if (refreshCookie != null) {
+                refreshToken = refreshCookie.getValue();
+                // 1.refreshToken 서명 검증
+                if(!jwtTokenProvider.validateToken(refreshToken)) throw new CustomJisikInException(ErrorCode.INVALID_REFRESH_TOKEN);
+
+                // 2. 본인 refresh token인지 검증
+                Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+                String savedRefreshToken = refreshTokenService.getToken(userId);
+                if (!refreshToken.equals(savedRefreshToken)) {
+                    throw new CustomJisikInException(ErrorCode.TOKEN_MISMATCH);
+                }
+
+                String newAccessToken = jwtTokenProvider.generateAccessToken(userId, jwtTokenProvider.getUsernameFromToken(accessToken));
+
+                // 3. 응답 헤더에 새 access token 담기
+                response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + newAccessToken);
+
+                log.info("access Token 재발급 성공");
+            }
+        }
     }
 
     // 헤더에서 "Authentication" 필드의 Bearer 토큰 추출

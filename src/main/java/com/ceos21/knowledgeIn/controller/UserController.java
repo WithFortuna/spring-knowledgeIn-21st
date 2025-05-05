@@ -37,6 +37,7 @@ public class UserController {
     }
 */
 
+ /*
     // 액세스 토큰 재발행
     @PostMapping("/users/reissue")
     public ResponseEntity<ReissueResponseDTO> reissue(@RequestHeader("Authorization") String accessHeader, @RequestBody ReissueDTO dto) {
@@ -44,7 +45,7 @@ public class UserController {
 
         return ResponseEntity.ok(responseDTO);
     }
-
+*/
     // 로그아웃
     @PostMapping("/users/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String accessHeader) {

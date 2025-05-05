@@ -64,10 +64,13 @@ public class UserService {
     }
 */
 
-    /*
+/*
+    */
+/*
    accessToken: 헤더에서 취함
    refreshToken: body에서 취함
-   */
+   *//*
+
     public ReissueResponseDTO reissue(String accessHeader, String refreshToken) {
         String accessToken = accessHeader.replace("Bearer ", "");
 
@@ -87,6 +90,7 @@ public class UserService {
 
         return new ReissueResponseDTO(newAccessToken);
     }
+*/
 
     // 로그아웃: 블랙리스트 등록 & refreshToken삭제
     public void logout(String accessHeader) {

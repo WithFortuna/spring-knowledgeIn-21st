@@ -3,6 +3,7 @@ package com.ceos21.knowledgeIn.config.security;
 import com.ceos21.knowledgeIn.security.auth.filter.CustomAuthenticationFilter;
 import com.ceos21.knowledgeIn.security.auth.filter.JwtAuthorizationFilter;
 import com.ceos21.knowledgeIn.security.auth.jwt.JwtTokenProvider;
+import com.ceos21.knowledgeIn.security.auth.jwt.refresh.RefreshTokenService;
 import com.ceos21.knowledgeIn.security.handler.JwtAuthenticationFailureHandler;
 import com.ceos21.knowledgeIn.security.handler.JwtAuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationSuccessHandler jwtSuccessHandler;
     private final JwtAuthenticationFailureHandler jwtFailureHandler;
+    private final RefreshTokenService refreshTokenService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationConfiguration authConfig) throws Exception {
@@ -38,7 +40,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
-                        new JwtAuthorizationFilter(jwtTokenProvider, userDetailsService),  // JWT 인가 필터 추가
+                        new JwtAuthorizationFilter(jwtTokenProvider, userDetailsService, refreshTokenService),  // JWT 인가 필터 추가
                         UsernamePasswordAuthenticationFilter.class
                 )
                 .addFilterAt(customAuthenticationFilter(authConfig.getAuthenticationManager()), UsernamePasswordAuthenticationFilter.class)  // 자체 인증 필터 추가

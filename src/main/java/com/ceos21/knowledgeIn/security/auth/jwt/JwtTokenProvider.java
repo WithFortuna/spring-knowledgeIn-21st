@@ -6,6 +6,8 @@ import com.ceos21.knowledgeIn.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.config.CustomRepositoryImplementationDetector;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -16,6 +18,7 @@ import java.util.Date;
  * JWT 토큰의 생성, 검증, 그리고 토큰에서 사용자 정보를 추출
  * */
 
+@Slf4j
 @Getter
 @Component
 public class JwtTokenProvider {
@@ -47,8 +50,11 @@ public class JwtTokenProvider {
 
     /**
      *  토큰 유효성 검증
+     *  유효: true
+     *  만료: false
+     *  그외 토큰 오류: exception
      */
-    public boolean validateToken(String token) {
+    public Boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(secretKey)
@@ -56,15 +62,15 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            System.out.println("❌ Token Expired");
+            log.info("Token Expired: 토큰 재발행 시작");
+            return false;
         } catch (UnsupportedJwtException e) {
-            System.out.println("❌ Unsupported JWT");
+            throw new CustomJisikInException(ErrorCode.UNSUPPORTED_TOKEN);
         } catch (MalformedJwtException e) {
-            System.out.println("❌ Malformed JWT");
+            throw new CustomJisikInException(ErrorCode.MALFORMED_TOKEN);
         } catch (SecurityException | IllegalArgumentException e) {
-            System.out.println("❌ Invalid JWT");
+            throw new CustomJisikInException(ErrorCode.INVALID_TOKEN);
         }
-        return false;
     }
 
     /**
