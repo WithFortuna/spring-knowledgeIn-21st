@@ -17,7 +17,8 @@ public class User {
     private String name;
 
     private String nickname;
-
+    // unique 해야함
+    @Column(unique = true)
     private String username;
 
     private String password;

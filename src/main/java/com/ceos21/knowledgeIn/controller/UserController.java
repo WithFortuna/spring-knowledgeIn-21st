@@ -1,10 +1,10 @@
 package com.ceos21.knowledgeIn.controller;
 
-import com.ceos21.knowledgeIn.auth.jwt.JwtTokenProvider;
-import com.ceos21.knowledgeIn.auth.jwt.refresh.RefreshTokenService;
+import com.ceos21.knowledgeIn.security.auth.jwt.JwtTokenProvider;
+import com.ceos21.knowledgeIn.security.auth.jwt.refresh.RefreshTokenService;
 import com.ceos21.knowledgeIn.controller.dto.auth.*;
 import com.ceos21.knowledgeIn.controller.dto.user.UserResponseDTO;
-import com.ceos21.knowledgeIn.service.UserService;
+import com.ceos21.knowledgeIn.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,15 +25,17 @@ public class UserController {
         return ResponseEntity.ok(id);
     }
 
+/*
     // 로그인
     @PostMapping("/users/signin")
     public ResponseEntity<SignInResponseDTO> signIn(@RequestBody SignInDTO dto) {
         String accessToken = userService.signIn(dto);
-        String refreshToken = refreshTokenService.createToken(tokenProvider.getUserIdFromToken(accessToken), 60 * 60 * 24 * 7);
+        String refreshToken = refreshTokenService.saveToken(tokenProvider.getUserIdFromToken(accessToken), 60 * 60 * 24 * 7);
 
 
         return ResponseEntity.ok(new SignInResponseDTO(accessToken, refreshToken));
     }
+*/
 
     // 액세스 토큰 재발행
     @PostMapping("/users/reissue")
