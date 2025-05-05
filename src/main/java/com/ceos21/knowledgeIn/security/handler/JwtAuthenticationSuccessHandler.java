@@ -3,9 +3,11 @@ package com.ceos21.knowledgeIn.security.handler;
 import com.ceos21.knowledgeIn.security.auth.jwt.JwtTokenProvider;
 import com.ceos21.knowledgeIn.security.auth.jwt.refresh.RefreshTokenService;
 import com.ceos21.knowledgeIn.security.auth.user.detail.CustomUserDetails;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -20,7 +22,7 @@ public class JwtAuthenticationSuccessHandler
     private final RefreshTokenService refreshService;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest req, HttpServletResponse res, Authentication authentication){
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication){
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = tokenProvider.generateAccessToken(userDetails.getUserId(), userDetails.getUsername());
@@ -28,8 +30,24 @@ public class JwtAuthenticationSuccessHandler
 
         refreshService.saveToken(userDetails.getUserId(), refreshToken);
 
-        res.addHeader("Access", accessToken);   // TODO: accesstoken과 refresh 토큰 전달 방식 개선필요
-        res.addHeader("Refresh", refreshToken);
-        res.setStatus(HttpStatus.CREATED.value());
+        // accessToken 헤더 담기
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+accessToken);
+
+        //refershToken 쿠키 담기
+        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+        refreshCookie.setHttpOnly(true);           // JS에서 접근 불가
+//        refreshCookie.setSecure(true);             // HTTPS 환경에서만 전송
+        refreshCookie.setPath("/");                // 전체 경로에서 유효
+        long cookieAge = tokenProvider.getJwtProperties().getRefreshTokenExpiration() / 1000;
+        refreshCookie.setMaxAge((int) cookieAge); // 초 단위
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                String.format("refreshToken=%s; Max-Age=%d; Path=/; HttpOnly; SameSite=Strict", refreshToken, cookieAge));
+/**
+ * response.setHeader(), addHeader() 차이
+* 단일 값 헤더(Authorization, Content-Type 등)는 보통 setHeader
+ * 멀티 값 헤더(Set-Cookie, Cache-Control 등)나 같은 이름으로 여러 값을 남기고 싶을 땐 addHeader
+* */
+        // 5) 상태 코드
+        response.setStatus(HttpStatus.CREATED.value());
     }
 }
