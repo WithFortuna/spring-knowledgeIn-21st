@@ -11,13 +11,14 @@ import com.ceos21.knowledgeIn.exception.CustomJisikInException;
 import com.ceos21.knowledgeIn.exception.ErrorCode;
 import com.ceos21.knowledgeIn.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
@@ -92,22 +93,28 @@ public class UserService {
     }
 */
 
+    // TODO: logouthandler로 등록해보자
     // 로그아웃: 블랙리스트 등록 & refreshToken삭제
-    public void logout(String accessHeader) {
+    public void logout(String accessHeader, String refreshToken) {
         String accessToken = accessHeader.replace("Bearer ", "");
+        // 토큰 검증
 
+        // case1: 만료된 토큰
         if (!jwtTokenProvider.validateToken(accessToken)) {
-            throw new CustomJisikInException(ErrorCode.INVALID_TOKEN);
+            // 1. refresh token 검증
+            jwtTokenProvider.validateToken(refreshToken);
+            // 2. access token 소유자 검증
+            jwtTokenProvider.validateTokenOwnership(accessToken, refreshToken);
+            log.info("만료된 토큰이었음에도 로그아웃 잘 됐음");
+        } //case2: 유효한 토큰
+        else {
+            // accessToken을 블랙리스트로 등록
+            long remainExpiration = jwtTokenProvider.getRemainExpiration(accessToken);
+            blacklistTokenService.blacklistAccessToken(accessToken, remainExpiration);
         }
-
+        // refreshToken 삭제
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
-
-        // 1. refreshToken 삭제
         refreshTokenService.deleteToken(userId);
-
-        // 2. accessToken을 블랙리스트로 등록
-        long remainExpiration = jwtTokenProvider.getRemainExpiration(accessToken);
-        blacklistTokenService.blacklistAccessToken(accessToken, remainExpiration);
     }
 
     //read

@@ -6,9 +6,13 @@ import com.ceos21.knowledgeIn.controller.dto.auth.*;
 import com.ceos21.knowledgeIn.controller.dto.user.UserResponseDTO;
 import com.ceos21.knowledgeIn.service.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.XSlf4j;
+import org.springframework.boot.web.server.Cookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.util.WebUtils;
+@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
 @RestController
@@ -48,8 +52,9 @@ public class UserController {
 */
     // 로그아웃
     @PostMapping("/users/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String accessHeader) {
-        userService.logout(accessHeader);
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String accessHeader, @CookieValue("refreshToken") String refreshToken) {
+        log.info("refreshTOken: " + refreshToken);
+        userService.logout(accessHeader, refreshToken);
 
         return ResponseEntity.ok().build();
     }

@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.
                         sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize.
-                        requestMatchers("/api/v1/users/signin","api/v1/users/signup", "api/v1/users/reissue").permitAll()   // 인증 불필요
+                        requestMatchers("/api/v1/users/signin","/api/v1/users/signup", "/api/v1/users/logout").permitAll()   // 인증 불필요
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

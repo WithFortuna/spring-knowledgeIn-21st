@@ -3,12 +3,16 @@ package com.ceos21.knowledgeIn.security.auth.jwt;
 
 import com.ceos21.knowledgeIn.exception.CustomJisikInException;
 import com.ceos21.knowledgeIn.exception.ErrorCode;
+import com.ceos21.knowledgeIn.security.auth.jwt.refresh.RefreshTokenService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.config.CustomRepositoryImplementationDetector;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.WebUtils;
 
 import java.security.Key;
 import java.util.Base64;
@@ -25,11 +29,14 @@ public class JwtTokenProvider {
 
     private final JwtProperties jwtProperties;
     private final Key secretKey;
+    private final RefreshTokenService refreshTokenService;
 
-    public JwtTokenProvider(JwtProperties jwtProperties) {
+    @Autowired
+    public JwtTokenProvider(JwtProperties jwtProperties, RefreshTokenService refreshTokenService) {
         this.jwtProperties = jwtProperties;
         byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.getSecret()); // 인코딩된 key를 사용했으므로 디코딩 필요
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);  // 원본 시크릿을 Key객체로 변환
+        this.refreshTokenService = refreshTokenService;
     }
 
     /**
@@ -62,7 +69,6 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            log.info("Token Expired: 토큰 재발행 시작");
             return false;
         } catch (UnsupportedJwtException e) {
             throw new CustomJisikInException(ErrorCode.UNSUPPORTED_TOKEN);
@@ -132,6 +138,20 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         return claims;
+    }
+
+    /**
+     * 본인 refresh token인지 검증
+     * */
+    public void validateTokenOwnership(String accessToken, String refreshToken) {
+
+        Long userId = getUserIdFromToken(accessToken);
+        String savedRefreshToken = refreshTokenService.getToken(userId);
+
+        if (!refreshToken.equals(savedRefreshToken)) {
+            throw new CustomJisikInException(ErrorCode.TOKEN_MISMATCH);
+        }
+
     }
 
 }

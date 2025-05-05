@@ -63,8 +63,12 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * 토큰 검증 및 만료시 재발행
+     * */
     private void validateAndReissue(HttpServletRequest request, HttpServletResponse response, String accessToken) {
         if (!jwtTokenProvider.validateToken(accessToken)) { // access 토큰이 만료된거면..
+            log.info("Token Expired: 토큰 재발행 시작");
             Cookie refreshCookie = WebUtils.getCookie(request, "refreshToken");
             String refreshToken;
 
@@ -74,11 +78,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 if(!jwtTokenProvider.validateToken(refreshToken)) throw new CustomJisikInException(ErrorCode.INVALID_REFRESH_TOKEN);
 
                 // 2. 본인 refresh token인지 검증
+                jwtTokenProvider.validateTokenOwnership(accessToken, refreshToken);
                 Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
-                String savedRefreshToken = refreshTokenService.getToken(userId);
-                if (!refreshToken.equals(savedRefreshToken)) {
-                    throw new CustomJisikInException(ErrorCode.TOKEN_MISMATCH);
-                }
 
                 String newAccessToken = jwtTokenProvider.generateAccessToken(userId, jwtTokenProvider.getUsernameFromToken(accessToken));
 
@@ -103,6 +104,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
 
-        return requestURI.startsWith("/api/v1/users/signup") || requestURI.equals("/api/v1/users/signin");
+        return requestURI.startsWith("/api/v1/users/signup") || requestURI.equals("/api/v1/users/signin") || requestURI.equals("/api/v1/users/logout");
     }
+
 }
