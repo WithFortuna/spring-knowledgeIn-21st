@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -34,14 +35,26 @@ public class JwtAuthenticationSuccessHandler
         response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+accessToken);
 
         //refershToken 쿠키 담기
+        long cookieAge = tokenProvider.getJwtProperties().getRefreshTokenExpiration() / 1000;   // 초 단위
+        String refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(cookieAge)
+                .build()
+                .toString();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie);
+/*
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);           // JS에서 접근 불가
-//        refreshCookie.setSecure(true);             // HTTPS 환경에서만 전송
+        refreshCookie.setSecure(true);             // HTTPS 환경에서만 전송
         refreshCookie.setPath("/");                // 전체 경로에서 유효
-        long cookieAge = tokenProvider.getJwtProperties().getRefreshTokenExpiration() / 1000;
-        refreshCookie.setMaxAge((int) cookieAge); // 초 단위
+        refreshCookie.setMaxAge((int) cookieAge);
+
         response.addHeader(HttpHeaders.SET_COOKIE,
                 String.format("refreshToken=%s; Max-Age=%d; Path=/; HttpOnly; SameSite=Strict", refreshToken, cookieAge));
+*/
+
 /**
  * response.setHeader(), addHeader() 차이
 * 단일 값 헤더(Authorization, Content-Type 등)는 보통 setHeader
