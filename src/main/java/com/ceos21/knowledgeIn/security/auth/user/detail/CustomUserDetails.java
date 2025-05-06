@@ -3,10 +3,13 @@ package com.ceos21.knowledgeIn.security.auth.user.detail;
 import com.ceos21.knowledgeIn.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
@@ -18,7 +21,10 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); // 필요시 ROLE_USER 등 추가 가능
+        List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.name()))
+                .collect(Collectors.toList());
+        return authorities; // 필요시 ROLE_USER 등 추가 가능
     }
 
     @Override
