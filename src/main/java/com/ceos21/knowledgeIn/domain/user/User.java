@@ -26,10 +26,14 @@ public class User {
 
     private String password;
 
+    @Builder.Default
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private List<Role> roles = new ArrayList<>();
 
+    public void addRole(Role role) {
+        roles.add(role);
+    }
 }

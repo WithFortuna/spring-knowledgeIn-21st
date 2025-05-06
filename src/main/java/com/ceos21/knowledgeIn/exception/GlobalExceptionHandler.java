@@ -13,11 +13,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomJisikInException.class)
     public ResponseEntity<ErrorResponseEntity> handleCustomJisikInException(CustomJisikInException e) {
+        ErrorCode errorCode = e.getErrorCode();
         log.error("CustomJisikInException 발생: 상태코드={}, 메시지={}, 에러명={}",
-                e.getErrorCode().getHttpStatus().value(),
-                e.getErrorCode().getMessage(),
-                e.getErrorCode().name());
-        return ErrorResponseEntity.of(e.getErrorCode());
+                errorCode.getHttpStatus().value(),
+                errorCode.getMessage(),
+                errorCode.name());
+        return ErrorResponseEntity.of(errorCode);
     }
 
 }

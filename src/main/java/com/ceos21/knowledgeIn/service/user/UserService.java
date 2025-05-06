@@ -1,5 +1,6 @@
 package com.ceos21.knowledgeIn.service.user;
 
+import com.ceos21.knowledgeIn.domain.user.Role;
 import com.ceos21.knowledgeIn.security.auth.jwt.JwtTokenProvider;
 import com.ceos21.knowledgeIn.security.auth.jwt.blacklist.BlacklistTokenService;
 import com.ceos21.knowledgeIn.security.auth.jwt.refresh.RefreshTokenService;
@@ -45,6 +46,7 @@ public class UserService {
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .build();
+        entity.addRole(Role.ROLE_USER);
 
         return userRepository.save(entity).getId();
     }

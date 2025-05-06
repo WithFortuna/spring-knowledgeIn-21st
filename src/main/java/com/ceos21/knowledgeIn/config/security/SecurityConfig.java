@@ -1,5 +1,6 @@
 package com.ceos21.knowledgeIn.config.security;
 
+import com.ceos21.knowledgeIn.domain.user.Role;
 import com.ceos21.knowledgeIn.security.auth.filter.CustomAuthenticationFilter;
 import com.ceos21.knowledgeIn.security.auth.filter.JwtAuthorizationFilter;
 import com.ceos21.knowledgeIn.security.auth.jwt.JwtTokenProvider;
@@ -36,8 +37,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.
                         sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize.
-                        requestMatchers("/api/v1/users/signin","/api/v1/users/signup", "/api/v1/users/logout").permitAll()   // 인증 불필요
-                        .anyRequest().authenticated()
+                                requestMatchers("/api/v1/users/signin", "/api/v1/users/signup", "/api/v1/users/logout").permitAll()   // 인증 불필요
+                                .requestMatchers("/api/v1/admin/**").hasRole(Role.ROLE_ADMIN.getKey())
+                                .anyRequest().hasRole(Role.ROLE_USER.getKey())
+//                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         new JwtAuthorizationFilter(jwtTokenProvider, userDetailsService, refreshTokenService),  // JWT 인가 필터 추가
