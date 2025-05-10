@@ -44,16 +44,6 @@ public class JwtAuthenticationSuccessHandler
                 .toString();
 
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie);
-/*
-        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-        refreshCookie.setHttpOnly(true);           // JS에서 접근 불가
-        refreshCookie.setSecure(true);             // HTTPS 환경에서만 전송
-        refreshCookie.setPath("/");                // 전체 경로에서 유효
-        refreshCookie.setMaxAge((int) cookieAge);
-
-        response.addHeader(HttpHeaders.SET_COOKIE,
-                String.format("refreshToken=%s; Max-Age=%d; Path=/; HttpOnly; SameSite=Strict", refreshToken, cookieAge));
-*/
 
 /**
  * response.setHeader(), addHeader() 차이
