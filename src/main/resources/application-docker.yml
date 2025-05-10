@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/spring_knowledge_in
+    url: jdbc:mysql://host.docker.internal:3306/spring_knowledge_in
     username: root
     password:
   jpa:

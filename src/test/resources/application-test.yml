@@ -1,14 +1,13 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/spring_knowledge_in
+    url: jdbc:mysql://localhost:3306/spring_knowledge_in_test
     username: root
     password:
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
         default_batch_fetch_size: 100
     show-sql: true
