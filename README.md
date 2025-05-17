@@ -474,18 +474,91 @@ App Runner 생성 → ECR에서 이미지 선택 → 배포
 
 ---
 
-## ⚠문제점
+## 문제점
 
 - App Runner는 **프리티어 제공량 없음**
 - **서울 리전**에서는 지원되지 않음
 
 ---
 
-## 오류 발생
-
+## 오류 발생!!
+- 상황: 회원가입은 통과, But 로그인은 500오류
 - **추정 원인**: Redis, DB 주소
 - **해결 방법**: RDS, ElasticCache 사용 필요
+---
+# 오류해결 과정
+## 0. Log 보기
+- 처음에 보려했으나 App Runner에서 원활하게 못보는 줄 알았다..
+---
+## 1. RDS 문제?
+- rds에 데이터 들어간거 확인
+=> 정상
+---
 
-```text
-=> 해결 중…
+## 2. Elastic Cache (Redis) 연결 문제?
+
+### 디버깅 과정
+0. 일단 redis에 접속해서 데이터가 들어갔는지 까보고 싶음 (but Elastic Cache는 동일 VPC내부에서만 접근)
+1. bastion EC2 생성
+  - VPC 내부에서 Elastic Cache로 접근 가능한 인스턴스를 구성
+
+2. redis6-cli 설치 및 테스트
+
 ```
+redis6-cli --tls -h [redis 기본 주소] -p 6379 //--tls 꼭 붙여야함
+```
+
+3. Redis 접근은 EC2에서는 되지만, App Runner에서는 저장 불가
+  - App Runner의 application.log 확인 결과 접속 실패 로그 출력
+![log](/uploads/appRunner_log.png)
+
+## 원인 분석
+
+- Elastic Cache는 public access 불가
+  - 반드시 같은 VPC 내부에서만 접근 가능함
+
+- App Runner는 public 영역에서 실행되며 기본적으로 VPC에 속하지 않음
+  - => VPC Connector 를 둬서 별도로 접근해야함
+
+---
+
+## 해결 방법: App Runner에 VPC Connector 추가
+
+# 해결에 필요했던 모든 조건
+
+1. VPC
+  - App Runner의 VPC Connector와 Elastic Cache가 동일한 VPC에 있어야 함
+
+2. Security Group
+  - 두 리소스의 SG는 달라도 무방
+  - 단, Elastic Cache의 Inbound 규칙에서 포트 6379에 대해  
+    App Runner VPC Connector의 SG가 소스로 등록되어 있어야 함
+
+3. Spring 설정
+
+```angular2html
+redis:
+ssl:
+enabled: true
+```
+
+- 이거 안넣어서 1시간 헤맸습니다.... .
+
+---
+
+## 정리 메모
+
+- App Runner가 VPC 자원에 접근하려면 반드시 VPC Connector가 필요함
+- Redis 사용 시 다음 사항 확인 필요
+
+  - TLS 설정 여부 (`--tls`)
+  - 보안 그룹 Inbound 규칙
+  - application-prod.yml 내 SSL 설정 여부
+
+### 배포 api 테스트 성공
+1. 로그인
+![login](./uploads/deploy-login.png)
+2. post 조회
+![post](./uploads/deploy-post.png)
+### Architecture
+![aws_architecture](./uploads/jisikin_architecture.png)
