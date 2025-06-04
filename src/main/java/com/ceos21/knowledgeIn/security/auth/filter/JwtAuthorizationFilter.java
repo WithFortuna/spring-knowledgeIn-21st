@@ -82,6 +82,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
                 String newAccessToken = jwtTokenProvider.generateAccessToken(userId, jwtTokenProvider.getUsernameFromToken(accessToken));
 
+                // TODO: RefreshToken이 redis에 있는지는 확인을 안하고 있음
                 // 3. 응답 헤더에 새 access token 담기
                 response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + newAccessToken);
 
